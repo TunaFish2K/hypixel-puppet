@@ -1,0 +1,37 @@
+{
+  "dependencies": {
+    "@types/express": "^5.0.2",
+    "express": "^5.1.0",
+    "hypixel-puppet": "file:",
+    "mineflayer": "^4.27.0",
+    "prismarine-chat": "^1.11.0"
+  },
+  "name": "hypixel-puppet",
+  "version": "0.1.0",
+  "description": "A Minecraft bot that connects to Hypixel, providing Guild Chat HTTP API.",
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "watch": "tsc -w",
+    "build": "tsc",
+    "test": "node --env-file dev.env ./dist/index.js",
+    "callback": "node ./dist/callbackForTesting.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TunaFish2K/hypixel-puppet.git"
+  },
+  "keywords": [
+    "Minecraft",
+    "Typescript"
+  ],
+  "author": "TunaFish2K",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TunaFish2K/hypixel-puppet/issues"
+  },
+  "homepage": "https://github.com/TunaFish2K/hypixel-puppet#readme",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
