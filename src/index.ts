@@ -41,7 +41,7 @@ class Puppet {
             return;
         }
         this.reconnecting = true;
-        console.log(`connecting to ${this.host}:${this.port}`);
+        console.log(`connecting to ${this.host}:${this.port}...`);
         this.bot = this.createBot();
         this.bot.on("kicked", this.onKick.bind(this));
         this.bot.on("end", this.onEnd.bind(this));
@@ -97,10 +97,12 @@ class Puppet {
 }
 
 class Server {
+    host: string;
     port: number;
     callback: string;
     puppet?: Puppet;
-    constructor(port: number, callback: string) {
+    constructor(host: string,port: number, callback: string) {
+        this.host = host;
         this.port = port;
         this.callback = callback;
     }
@@ -158,8 +160,8 @@ class Server {
             });
         });
 
-        server.listen(this.port, () => {
-            console.log(`Server listening on port ${this.port}.`);
+        server.listen(this.port, this.host, () => {
+            console.log(`Server listening on ${this.host}:${this.port}.`);
         });
 
         this.runningServer = server;
@@ -184,13 +186,14 @@ function main() {
         return console.error("environ `MCUSER` not set!");
     }
 
+    const apiHost = process.env["API_HOST"] || "127.0.0.1";
     const apiPort = process.env["API_PORT"];
     if (!apiPort || Number.isNaN(parseInt(apiPort))) return console.error("environ `API_PORT` must be a valid number!");
 
     const callback = process.env["API_CALLBACK"];
     if (!callback) return console.error("environ `API_CALLBACK` not set!");
 
-    const server = new Server(parseInt(apiPort), callback);
+    const server = new Server(apiHost, parseInt(apiPort), callback);
     const puppet = new Puppet(host, port, username);
 
     server.puppet = puppet;
