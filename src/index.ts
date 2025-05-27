@@ -1,10 +1,13 @@
 import { Bot, createBot } from "mineflayer";
 import { ChatMessage } from "prismarine-chat";
 import express from "express";
+import { BOOP_MESSAGE } from "./regex";
 
 const PREFIX = "\u07f7";
 
 class Puppet {
+    firstLoggedIn = true;
+
     bot?: Bot;
     reconnecting: boolean = false;
 
@@ -13,10 +16,28 @@ class Puppet {
     username: string;
     server?: Server;
 
-    constructor(host: string, port: number, username: string) {
+    options: {
+        guildBoop: boolean;
+    } = {
+        guildBoop: false,
+    };
+
+    constructor(
+        host: string,
+        port: number,
+        username: string,
+        options?: Partial<typeof this.options>,
+    ) {
         this.host = host;
         this.port = port;
         this.username = username;
+
+        for (const key in options ?? {}) {
+            // @ts-ignore
+            this.options[key] = options[key];
+        }
+
+        this.printOptions();
     }
 
     createBot() {
@@ -25,14 +46,20 @@ class Puppet {
             port: this.port,
             auth: "microsoft",
             username: this.username,
-            version: "1.8.9"
+            version: "1.8.9",
         });
     }
 
+    printOptions() {
+        console.log(`Guild Boop: ${this.options.guildBoop}`);
+    }
+
     joinLimbo() {
+        console.log("joining limbo...");
         for (let i = 0; i < 20; i++) {
             this.bot!.chat("/");
         }
+        this.firstLoggedIn = false;
     }
 
     reconnect() {
@@ -46,7 +73,7 @@ class Puppet {
         this.bot.on("kicked", this.onKick.bind(this));
         this.bot.on("end", this.onEnd.bind(this));
         this.bot.on("error", this.onError.bind(this));
-        this.bot.on("login", this.onLogin.bind(this));
+        this.bot.on("spawn", this.onLogin.bind(this));
 
         this.bot.on("message", this.onMessage.bind(this));
     }
@@ -69,12 +96,20 @@ class Puppet {
     onLogin() {
         this.reconnecting = false;
         console.log("Logged in.");
-        this.joinLimbo();
+        this.firstLoggedIn && this.joinLimbo();
     }
 
     onMessage(message: ChatMessage) {
         console.log("received:", message.toString());
         this.server!.pushMessage(message.toMotd());
+
+        if (this.options.guildBoop) {
+            const boopMatch = message.toString().match(BOOP_MESSAGE);
+            if (boopMatch && boopMatch[5]) {
+                console.log(`boop: ${boopMatch[5]}`);
+                this.pushMessageToSend(`/boop ${boopMatch[5]}`);
+            }
+        }
     }
 
     messageQueue: string[] = [];
@@ -101,7 +136,7 @@ class Server {
     port: number;
     callback: string;
     puppet?: Puppet;
-    constructor(host: string,port: number, callback: string) {
+    constructor(host: string, port: number, callback: string) {
         this.host = host;
         this.port = port;
         this.callback = callback;
@@ -128,7 +163,7 @@ class Server {
                     },
                     body: JSON.stringify({
                         message,
-                        username: this.puppet!.username
+                        username: this.puppet!.username,
                     }),
                 });
                 this.messageQueue.shift();
@@ -156,7 +191,7 @@ class Server {
 
         server.get("/name", (req, res) => {
             res.json({
-                name: this.puppet!.bot!.username
+                name: this.puppet!.bot!.username,
             });
         });
 
@@ -188,13 +223,18 @@ function main() {
 
     const apiHost = process.env["API_HOST"] || "127.0.0.1";
     const apiPort = process.env["API_PORT"];
-    if (!apiPort || Number.isNaN(parseInt(apiPort))) return console.error("environ `API_PORT` must be a valid number!");
+    if (!apiPort || Number.isNaN(parseInt(apiPort)))
+        return console.error("environ `API_PORT` must be a valid number!");
 
     const callback = process.env["API_CALLBACK"];
     if (!callback) return console.error("environ `API_CALLBACK` not set!");
 
+    const guildBoop = process.env["GUILD_BOOP"] == "true" ? true : false;
+
     const server = new Server(apiHost, parseInt(apiPort), callback);
-    const puppet = new Puppet(host, port, username);
+    const puppet = new Puppet(host, port, username, {
+        guildBoop,
+    });
 
     server.puppet = puppet;
     puppet.server = server;
