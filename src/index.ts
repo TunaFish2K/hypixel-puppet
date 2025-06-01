@@ -1,9 +1,60 @@
 import { Bot, createBot } from "mineflayer";
 import { ChatMessage } from "prismarine-chat";
 import express from "express";
-import { BOOP_MESSAGE } from "./regex";
+import { COMMAND_MESSAGE } from "./regex";
 
-const PREFIX = "\u07f7";
+const PREFIX = "\u2741";
+
+const CHR = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+function createMessageID() {
+    let result = [];
+    for (let i = 0; i < 8; i++) {
+        result.push(CHR[Math.floor(Math.random() * CHR.length)]);
+    }
+    return `[${result.join("")}]`;
+}
+
+const SUPPORTED_COMMANDS: {
+    command: string;
+    env: string;
+    default?: boolean;
+}[] = [
+    {
+        command: "boop",
+        env: "GUILD_BOOP",
+    },
+    {
+        command: "ciallo",
+        env: "GUILD_CIALLO",
+    },
+    {
+        command: "cf",
+        env: "GUILD_FLIP"
+    },
+    {
+        command: "dice",
+        env: "GUILD_DICE"
+    },
+    {
+        command: "8ball",
+        env: "GUILD_8BALL"
+    },
+    {
+        command: "help",
+        env: "GUILD_HELP",
+        default: true,
+    },
+];
+
+const EIGHT_BALL_MESSAGES = [
+    "嗯嗯",
+    "不太行",
+    "对的对的",
+    "不对不对",
+    "不知道捏",
+    "再问一遍嘿嘿",
+    "不告诉你喵",
+];
 
 class Puppet {
     firstLoggedIn = true;
@@ -17,9 +68,9 @@ class Puppet {
     server?: Server;
 
     options: {
-        guildBoop: boolean;
+        enabledCommands: string[];
     } = {
-        guildBoop: false,
+        enabledCommands: [],
     };
 
     constructor(
@@ -36,8 +87,6 @@ class Puppet {
             // @ts-ignore
             this.options[key] = options[key];
         }
-
-        this.printOptions();
     }
 
     createBot() {
@@ -48,10 +97,6 @@ class Puppet {
             username: this.username,
             version: "1.8.9",
         });
-    }
-
-    printOptions() {
-        console.log(`Guild Boop: ${this.options.guildBoop}`);
     }
 
     joinLimbo() {
@@ -103,12 +148,54 @@ class Puppet {
         console.log("received:", message.toString());
         this.server!.pushMessage(message.toMotd());
 
-        if (this.options.guildBoop) {
-            const boopMatch = message.toString().match(BOOP_MESSAGE);
-            if (boopMatch && boopMatch[5]) {
-                console.log(`boop: ${boopMatch[5]}`);
-                this.pushMessageToSend(`/boop ${boopMatch[5]}`);
-            }
+        const commandMatch = message.toString().match(COMMAND_MESSAGE);
+        if (commandMatch && commandMatch[5]) {
+            console.log(commandMatch.map((v, i) => `${i}: ${v}`).join("\n"));
+            this.handleGuildCommand(
+                commandMatch[5],
+                commandMatch[6] !== undefined ? commandMatch[6].trim().split(" ").filter(v => v !== "") : [],
+            );
+        }
+    }
+
+    isCommandSupported(command: string) {
+        return this.options.enabledCommands.indexOf(command) !== -1;
+    }
+
+    createCialloMessage() {
+        if (Math.random() <= 0.999) {
+            return "Ciallo～(∠・ω<)⌒★";
+        }
+        return "Ciallo～ᕕ(◠ڼ◠)ᕗ";
+    }
+
+    handleGuildCommand(command: string, arg: string[]) {
+        if (!this.isCommandSupported(command)) return;
+
+        if (command === "boop" && arg[0]) {
+            return this.sendMessage(`/boop ${arg[0]}`);
+        }
+
+        if (command === "ciallo") {
+            return this.sendMessage(`/gc ${PREFIX} ${this.createCialloMessage()} ${createMessageID()}`);
+        }
+
+        if (command === "cf") {
+            return this.sendMessage(`/gc ${PREFIX} ${Math.random() > 0.5 ? "head" : "tail"} ${createMessageID()}`);
+        }
+
+        if (command === "dice") {
+            return this.sendMessage(`/gc ${PREFIX} ${Math.floor(Math.random() * 6) + 1} ${createMessageID()}`);
+        }
+
+        if (command === "8ball") {
+            return this.sendMessage(`/gc ${PREFIX} ${EIGHT_BALL_MESSAGES[Math.floor(Math.random() * EIGHT_BALL_MESSAGES.length)]} ${createMessageID()}`)
+        }
+
+        if (command === "help" && this.options.enabledCommands.length > 0) {
+            return this.sendMessage(
+                `${PREFIX} Commands: ${this.options.enabledCommands.join(", ")} ${createMessageID()}`,
+            );
         }
     }
 
@@ -229,11 +316,15 @@ function main() {
     const callback = process.env["API_CALLBACK"];
     if (!callback) return console.error("environ `API_CALLBACK` not set!");
 
-    const guildBoop = process.env["GUILD_BOOP"] == "true" ? true : false;
+    const enabledCommands = SUPPORTED_COMMANDS.filter((v) =>
+        process.env[v.env] !== undefined
+            ? process.env[v.env] === "true"
+            : v.default ?? false,
+    ).map((v) => v.command);
 
     const server = new Server(apiHost, parseInt(apiPort), callback);
     const puppet = new Puppet(host, port, username, {
-        guildBoop,
+        enabledCommands: enabledCommands,
     });
 
     server.puppet = puppet;

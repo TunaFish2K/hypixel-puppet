@@ -1,1 +1,1 @@
-export const BOOP_MESSAGE =  /^(Guild|Officer) > (\[.*])?\s*(\w{2,17}).*?(\[.{1,15}])?: \!boop \s*(\w{2,17}).*?$/
+export const COMMAND_MESSAGE =  /^(Guild|Officer) > (\[.*])?\s*(\w{2,17}).*?(\[.{1,15}])?: \!(\w+)(.+)?$/
