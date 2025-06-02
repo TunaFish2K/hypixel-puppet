@@ -1,7 +1,7 @@
 import { Bot, createBot } from "mineflayer";
 import { ChatMessage } from "prismarine-chat";
 import express from "express";
-import { COMMAND_MESSAGE } from "./regex";
+import { GUILD_COMMAND, PARTY_COMMAND } from "./regex";
 
 const PREFIX = "\u2741";
 
@@ -29,15 +29,15 @@ const SUPPORTED_COMMANDS: {
     },
     {
         command: "cf",
-        env: "GUILD_FLIP"
+        env: "GUILD_FLIP",
     },
     {
         command: "dice",
-        env: "GUILD_DICE"
+        env: "GUILD_DICE",
     },
     {
         command: "8ball",
-        env: "GUILD_8BALL"
+        env: "GUILD_8BALL",
     },
     {
         command: "help",
@@ -148,53 +148,122 @@ class Puppet {
         console.log("received:", message.toString());
         this.server!.pushMessage(message.toMotd());
 
-        const commandMatch = message.toString().match(COMMAND_MESSAGE);
-        if (commandMatch && commandMatch[5]) {
-            console.log(commandMatch.map((v, i) => `${i}: ${v}`).join("\n"));
-            this.handleGuildCommand(
-                commandMatch[5],
-                commandMatch[6] !== undefined ? commandMatch[6].trim().split(" ").filter(v => v !== "") : [],
-            );
+        const guildMatch = message.toString().match(GUILD_COMMAND);
+        const partyMatch = message.toString().match(PARTY_COMMAND);
+
+        let commandType: "guild" | "party";
+        let command: string;
+        let sender: string;
+        let argString: string;
+
+        if (partyMatch && partyMatch[3]) {
+            commandType = "party";
+            sender = partyMatch[2];
+            command = partyMatch[3];
+            argString = partyMatch[4] ?? "";
+        } else if (guildMatch && guildMatch[4]) {
+            commandType = "guild";
+            sender = guildMatch[2];
+            command = guildMatch[4];
+            argString = guildMatch[5] ?? "";
+        } else {
+            return;
         }
+
+        console.log({
+            commandType,
+            sender,
+            command,
+            argString,
+        });
+
+        this.handleCommand(
+            commandType,
+            sender,
+            command,
+            argString
+                .trim()
+                .split(" ")
+                .filter((v) => v !== ""),
+        );
     }
 
     isCommandSupported(command: string) {
         return this.options.enabledCommands.indexOf(command) !== -1;
     }
 
-    createCialloMessage() {
-        if (Math.random() <= 0.999) {
-            return "Ciallo～(∠・ω<)⌒★";
-        }
-        return "Ciallo～ᕕ(◠ڼ◠)ᕗ";
+    createOopsCialloMessage() {
+        const possibilities = [
+            "Sensei来喽! ～ᕕ(◠ڼ◠)ᕗ",
+            "?? [ADMIN] Minikloon is visiting Your Island!",
+            "Otto! ♿",
+            "籽岷! 强强?",
+            "籽岷! 这么强?",
+            "籽岷! 有点强",
+            "籽岷! 这么弱",
+            "籽岷! 到底有多强"
+        ];
+
+        return possibilities[Math.floor(Math.random() * possibilities.length)];
     }
 
-    handleGuildCommand(command: string, arg: string[]) {
+    createCialloMessage() {
+        if (Math.random() <= 0.90) {
+            return "Ciallo～(∠・ω<)⌒★";
+        }
+        return this.createOopsCialloMessage();
+    }
+
+    handleCommand(
+        type: "party" | "guild",
+        sender: string,
+        command: string,
+        arg: string[],
+    ) {
         if (!this.isCommandSupported(command)) return;
+        const chatPrefix = type === "party" ? "/pc" : "/gc";
 
         if (command === "boop" && arg[0]) {
             return this.sendMessage(`/boop ${arg[0]}`);
         }
 
         if (command === "ciallo") {
-            return this.sendMessage(`/gc ${PREFIX} ${this.createCialloMessage()} ${createMessageID()}`);
+            return this.sendMessage(
+                `${chatPrefix} ${PREFIX} ${this.createCialloMessage()} ${createMessageID()}`,
+            );
         }
 
         if (command === "cf") {
-            return this.sendMessage(`/gc ${PREFIX} ${Math.random() > 0.5 ? "head" : "tail"} ${createMessageID()}`);
+            return this.sendMessage(
+                `${chatPrefix} ${PREFIX} ${
+                    Math.random() > 0.5 ? "head" : "tail"
+                } ${createMessageID()}`,
+            );
         }
 
         if (command === "dice") {
-            return this.sendMessage(`/gc ${PREFIX} ${Math.floor(Math.random() * 6) + 1} ${createMessageID()}`);
+            return this.sendMessage(
+                `${chatPrefix} ${PREFIX} ${
+                    Math.floor(Math.random() * 6) + 1
+                } ${createMessageID()}`,
+            );
         }
 
         if (command === "8ball") {
-            return this.sendMessage(`/gc ${PREFIX} ${EIGHT_BALL_MESSAGES[Math.floor(Math.random() * EIGHT_BALL_MESSAGES.length)]} ${createMessageID()}`)
+            return this.sendMessage(
+                `${chatPrefix} ${PREFIX} ${
+                    EIGHT_BALL_MESSAGES[
+                        Math.floor(Math.random() * EIGHT_BALL_MESSAGES.length)
+                    ]
+                } ${createMessageID()}`,
+            );
         }
 
         if (command === "help" && this.options.enabledCommands.length > 0) {
             return this.sendMessage(
-                `${PREFIX} Commands: ${this.options.enabledCommands.join(", ")} ${createMessageID()}`,
+                `${chatPrefix} ${PREFIX} Commands: ${this.options.enabledCommands.join(
+                    ", ",
+                )} ${createMessageID()}`,
             );
         }
     }
