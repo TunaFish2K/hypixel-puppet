@@ -1,7 +1,8 @@
 import { Bot, createBot } from "mineflayer";
 import { ChatMessage } from "prismarine-chat";
 import express from "express";
-import { GUILD_COMMAND, PARTY_COMMAND } from "./regex";
+import { GUILD_COMMAND, GUILD_MESSAGE, PARTY_COMMAND } from "./regex";
+import { lootVanguard, MESSAGE_WIDTH } from "./vanguardLooter";
 
 const PREFIX = "\u2741";
 
@@ -21,27 +22,31 @@ const SUPPORTED_COMMANDS: {
 }[] = [
     {
         command: "boop",
-        env: "GUILD_BOOP",
+        env: "BOT_BOOP",
     },
     {
         command: "ciallo",
-        env: "GUILD_CIALLO",
+        env: "BOT_CIALLO",
     },
     {
         command: "cf",
-        env: "GUILD_FLIP",
+        env: "BOT_FLIP",
     },
     {
         command: "dice",
-        env: "GUILD_DICE",
+        env: "BOT_DICE",
     },
     {
         command: "8ball",
-        env: "GUILD_8BALL",
+        env: "BOT_8BALL",
+    },
+    {
+        command: "vg",
+        env: "BOT_VANGUARD",
     },
     {
         command: "help",
-        env: "GUILD_HELP",
+        env: "BOT_HELP",
         default: true,
     },
 ];
@@ -145,11 +150,13 @@ class Puppet {
     }
 
     onMessage(message: ChatMessage) {
-        console.log("received:", message.toString());
-        this.server!.pushMessage(message.toMotd());
+        const plain = message.toString();
 
-        const guildMatch = message.toString().match(GUILD_COMMAND);
-        const partyMatch = message.toString().match(PARTY_COMMAND);
+        console.log("received:", plain);
+        if (GUILD_MESSAGE.test(plain)) this.server!.pushMessage(message.toMotd());
+
+        const guildMatch = plain.match(GUILD_COMMAND);
+        const partyMatch = plain.match(PARTY_COMMAND);
 
         let commandType: "guild" | "party";
         let command: string;
@@ -169,13 +176,6 @@ class Puppet {
         } else {
             return;
         }
-
-        console.log({
-            commandType,
-            sender,
-            command,
-            argString,
-        });
 
         this.handleCommand(
             commandType,
@@ -201,14 +201,14 @@ class Puppet {
             "籽岷! 这么强?",
             "籽岷! 有点强",
             "籽岷! 这么弱",
-            "籽岷! 到底有多强"
+            "籽岷! 到底有多强",
         ];
 
         return possibilities[Math.floor(Math.random() * possibilities.length)];
     }
 
     createCialloMessage() {
-        if (Math.random() <= 0.90) {
+        if (Math.random() <= 0.9) {
             return "Ciallo～(∠・ω<)⌒★";
         }
         return this.createOopsCialloMessage();
@@ -257,6 +257,15 @@ class Puppet {
                     ]
                 } ${createMessageID()}`,
             );
+        }
+
+        if (command === "vg" && type === "party") {
+            const result = lootVanguard().toReversed();
+            const interval = setInterval(() => {
+                if (result.length === 0) return interval.close();
+                this.sendMessage(`${chatPrefix} ${PREFIX} ${result.pop()?.padEnd(MESSAGE_WIDTH)} ${createMessageID()}`);
+            }, 1000);
+            return;
         }
 
         if (command === "help" && this.options.enabledCommands.length > 0) {
