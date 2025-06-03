@@ -1,47 +1,47 @@
 const LOOT_TABLE = [
-    { name: "☠ Flawless Onyx Gemstone", quantity: 1, weight: 80 },
-    { name: "☘ Flawless Peridot Gemstone", quantity: 1, weight: 80 },
-    { name: "☘ Flawless Citrine Gemstone", quantity: 1, weight: 80 },
-    { name: "α Flawless Aquamarine Gemstone", quantity: 1, weight: 80 },
-    { name: "☠ Fine Onyx Gemstone", quantity: 160, weight: 40 },
-    { name: "☘ Fine Peridot Gemstone", quantity: 160, weight: 40 },
-    { name: "☘ Fine Citrine Gemstone", quantity: 160, weight: 40 },
-    { name: "α Fine Aquamarine Gemstone", quantity: 160, weight: 40 },
-    { name: "Suspicious Scrap", quantity: 4, weight: 150 },
-    { name: "Blue Goblin Egg", quantity: 2, weight: 140 },
-    { name: "Blue Goblin Egg", quantity: 4, weight: 70 },
-    { name: "Umber Key", quantity: 1, weight: 100 },
-    { name: "Umber Key", quantity: 2, weight: 50 },
-    { name: "Umber Key", quantity: 4, weight: 10 },
-    { name: "Tungsten Key", quantity: 1, weight: 100 },
-    { name: "Tungsten Key", quantity: 2, weight: 50 },
-    { name: "Tungsten Key", quantity: 4, weight: 10 },
-    { name: "Refined Umber", quantity: 2, weight: 80 },
-    { name: "Refined Tungsten", quantity: 2, weight: 80 },
-    { name: "Refined Mithril", quantity: 2, weight: 60 },
-    { name: "Refined Titanium", quantity: 2, weight: 60 },
-    { name: "Shattered Locket", quantity: 1, weight: 3 },
+    { name: "☠ Flawless Onyx Gemstone", count: 1, weight: 80 },
+    { name: "☘ Flawless Peridot Gemstone", count: 1, weight: 80 },
+    { name: "☘ Flawless Citrine Gemstone", count: 1, weight: 80 },
+    { name: "☂ Flawless Aquamarine Gemstone", count: 1, weight: 80 },
+    { name: "☠ Fine Onyx Gemstone", count: 160, weight: 40 },
+    { name: "☘ Fine Peridot Gemstone", count: 160, weight: 40 },
+    { name: "☘ Fine Citrine Gemstone", count: 160, weight: 40 },
+    { name: "☂ Fine Aquamarine Gemstone", count: 160, weight: 40 },
+    { name: "Blue Goblin Egg", count: 2, weight: 140 },
+    { name: "Blue Goblin Egg", count: 4, weight: 70 },
+    { name: "Suspicious Scrap", count: 4, weight: 150 },
+    { name: "Umber Key", count: 1, weight: 100 },
+    { name: "Umber Key", count: 2, weight: 50 },
+    { name: "Umber Key", count: 4, weight: 10 },
+    { name: "Tungsten Key", count: 1, weight: 100 },
+    { name: "Tungsten Key", count: 2, weight: 50 },
+    { name: "Tungsten Key", count: 4, weight: 10 },
+    { name: "Refined Mithril", count: 2, weight: 60 },
+    { name: "Refined Titanium", count: 2, weight: 60 },
+    { name: "Refined Umber", count: 2, weight: 80 },
+    { name: "Refined Tungsten", count: 2, weight: 80 },
+    { name: "Shattered Locket", count: 1, weight: 3 },
     {
         name: "Dwarven O's Metallic Minis",
-        quantity: 1,
+        count: 1,
         weight: 50,
         unique: true,
     },
-    { name: "Umber Plate", quantity: 1, weight: 50 },
-    { name: "Tungsten Plate", quantity: 1, weight: 50 },
-    { name: "Enchanted Book", quantity: 1, weight: 150 },
-    { name: "Mithril Plate", quantity: 1, weight: 30 },
-    { name: "Glacite Amalgamation", quantity: 2, weight: 80 },
-    { name: "Glacite Amalgamation", quantity: 4, weight: 40 },
-    { name: "Skeleton Key", quantity: 1, weight: 6 },
-    { name: "Bejeweled Handle", quantity: 4, weight: 150 },
-    { name: "Opal Crystal", quantity: 1, weight: 50, unique: true },
-    { name: "Onyx Crystal", quantity: 1, weight: 50, unique: true },
-    { name: "Aquamarine Crystal", quantity: 1, weight: 50, unique: true },
-    { name: "Peridot Crystal", quantity: 1, weight: 50, unique: true },
-    { name: "Citrine Crystal", quantity: 1, weight: 50, unique: true },
-    { name: "Ruby Crystal", quantity: 1, weight: 50, unique: true },
-    { name: "Jasper Crystal", quantity: 1, weight: 50, unique: true },
+    { name: "Umber Plate", count: 1, weight: 50 },
+    { name: "Tungsten Plate", count: 1, weight: 50 },
+    { name: "Enchanted Book", count: 1, weight: 150 },
+    { name: "Mithril Plate", count: 1, weight: 30 },
+    { name: "Glacite Amalgamation", count: 2, weight: 80 },
+    { name: "Glacite Amalgamation", count: 4, weight: 40 },
+    { name: "Skeleton Key", count: 1, weight: 6 },
+    { name: "Bejeweled Handle", count: 4, weight: 150 },
+    { name: "Opal Crystal", count: 1, weight: 50, unique: true },
+    { name: "Onyx Crystal", count: 1, weight: 50, unique: true },
+    { name: "Aquamarine Crystal", count: 1, weight: 50, unique: true },
+    { name: "Peridot Crystal", count: 1, weight: 50, unique: true },
+    { name: "Citrine Crystal", count: 1, weight: 50, unique: true },
+    { name: "Ruby Crystal", count: 1, weight: 50, unique: true },
+    { name: "Jasper Crystal", count: 1, weight: 50, unique: true },
 ];
 
 export const MESSAGE_WIDTH = 64;
@@ -59,12 +59,12 @@ export function lootVanguard(): string[] {
 
     function roll(): {
         name: string;
-        quantity: number;
+        count: number;
     } {
         if (Math.random() < 1 / 10000) {
             return {
                 name: "Frostbitten Dye",
-                quantity: 1,
+                count: 1,
             };
         }
 
@@ -91,13 +91,13 @@ export function lootVanguard(): string[] {
         if (index === -1) {
             loots.push({
                 item: item.name,
-                count: item.quantity,
+                count: item.count,
             });
         } else {
-            loots[index].count += item.quantity;
+            loots[index].count += item.count;
         }
     }
-    loots.sort((a, b) => a.item.includes("Crystal") ? -1 : 1);
+    loots.sort((a, b) => (a.item.includes("Crystal") ? -1 : 1));
 
     const glacitePowder = 25000 + Math.floor(Math.random() * (50000 + 1));
 
