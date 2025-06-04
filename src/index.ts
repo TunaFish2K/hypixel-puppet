@@ -1,7 +1,7 @@
 import { Bot, createBot } from "mineflayer";
 import { ChatMessage } from "prismarine-chat";
 import express from "express";
-import { GUILD_COMMAND, GUILD_MESSAGE, PARTY_COMMAND } from "./regex";
+import { GUILD_COMMAND, GUILD_MESSAGE, PARTY_COMMAND, PARTY_MESSAGE } from "./regex";
 import { lootVanguard, MESSAGE_WIDTH } from "./vanguardLooter";
 
 const PREFIX = "\u2741";
@@ -153,7 +153,7 @@ class Puppet {
         const plain = message.toString();
 
         console.log("received:", plain);
-        if (GUILD_MESSAGE.test(plain)) this.server!.pushMessage(message.toMotd());
+        if (!PARTY_MESSAGE.test(plain)) this.server!.pushMessage(message.toMotd());
 
         const guildMatch = plain.match(GUILD_COMMAND);
         const partyMatch = plain.match(PARTY_COMMAND);
@@ -224,7 +224,8 @@ class Puppet {
         const chatPrefix = type === "party" ? "/pc" : "/gc";
 
         if (command === "boop" && arg[0]) {
-            return this.sendMessage(`/boop ${arg[0]}`);
+            this.sendMessage(`/boop ${arg[0]}`);
+            return this.sendMessage(`${chatPrefix} ${PREFIX} 完成了主人的任务喵~ ${createMessageID()}`);
         }
 
         if (command === "ciallo") {
