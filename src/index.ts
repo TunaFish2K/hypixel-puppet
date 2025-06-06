@@ -235,11 +235,11 @@ class Puppet {
 
         if (command === "boop" && arg[0]) {
             this.sendMessage(`/boop ${arg[0]}`);
-            return setTimeout(() => {
+            return sender !== this.username ? setTimeout(() => {
                 this.sendMessage(
                     `${chatPrefix} ${PREFIX} 完成了主人的任务喵~ ${createMessageID()}`,
                 );
-            }, 500);
+            }, 500) : undefined;
         }
 
         if (command === "ciallo") {
