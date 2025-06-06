@@ -1,7 +1,28 @@
 ## hypixel-puppet
 ### what does it do?
-It connects to hypixel, providing http API for you send message and requesting your callback server to send your messages it receives.
-### Protocol
+It connects to hypixel, serving as a guild (and party) chat command bot.  
+Can provide http API for you send message and requesting your callback server to send your messages it receives.
+
+### Chat Commands
+```
+# list all commands
+!help
+# auto /boop
+!boop <player>
+# send a cute message
+!ciallo
+# flip a coin
+!flip
+# roll a dice
+!dice
+# ask the 8ball
+!8ball
+# loot a vanguard(spamming alert! only available in party.)
+!vg
+```
+All of the commands can be disabled with environment variables.
+
+### Chat API Protocol
 #### Send Message
 ```
 POST http://${API_HOST}:${API_PORT}/send
