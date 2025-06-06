@@ -1,7 +1,12 @@
 import { Bot, createBot } from "mineflayer";
 import { ChatMessage } from "prismarine-chat";
 import express from "express";
-import { GUILD_COMMAND, GUILD_MESSAGE, PARTY_COMMAND, PARTY_MESSAGE } from "./regex";
+import {
+    GUILD_COMMAND,
+    GUILD_MESSAGE,
+    PARTY_COMMAND,
+    PARTY_MESSAGE,
+} from "./regex";
 import { lootVanguard, MESSAGE_WIDTH } from "./vanguardLooter";
 
 const PREFIX = "\u2741";
@@ -74,10 +79,12 @@ class Puppet {
 
     options: {
         enabledCommands: string[];
-        alwaysReconnect: boolean
+        alwaysReconnect: boolean;
+        chatAPI: boolean;
     } = {
         enabledCommands: [],
-        alwaysReconnect: true
+        alwaysReconnect: true,
+        chatAPI: false,
     };
 
     constructor(
@@ -155,7 +162,8 @@ class Puppet {
         const plain = message.toString();
 
         console.log("received:", plain);
-        if (!PARTY_MESSAGE.test(plain)) this.server!.pushMessage(message.toMotd());
+        if (this.options.chatAPI && !PARTY_MESSAGE.test(plain))
+            this.server!.pushMessage(message.toMotd());
 
         const guildMatch = plain.match(GUILD_COMMAND);
         const partyMatch = plain.match(PARTY_COMMAND);
@@ -227,7 +235,9 @@ class Puppet {
 
         if (command === "boop" && arg[0]) {
             this.sendMessage(`/boop ${arg[0]}`);
-            return this.sendMessage(`${chatPrefix} ${PREFIX} 完成了主人的任务喵~ ${createMessageID()}`);
+            return this.sendMessage(
+                `${chatPrefix} ${PREFIX} 完成了主人的任务喵~ ${createMessageID()}`,
+            );
         }
 
         if (command === "ciallo") {
@@ -266,7 +276,11 @@ class Puppet {
             const result = lootVanguard().toReversed();
             const interval = setInterval(() => {
                 if (result.length === 0) return interval.close();
-                this.sendMessage(`${chatPrefix} ${PREFIX} ${result.pop()?.padEnd(MESSAGE_WIDTH)} ${createMessageID()}`);
+                this.sendMessage(
+                    `${chatPrefix} ${PREFIX} ${result
+                        .pop()
+                        ?.padEnd(MESSAGE_WIDTH)} ${createMessageID()}`,
+                );
             }, 1000);
             return;
         }
@@ -389,6 +403,7 @@ function main() {
         return console.error("environ `MCUSER` not set!");
     }
 
+    const chatAPI = process.env["CHAT_API"] === "true";
     const apiHost = process.env["API_HOST"] || "127.0.0.1";
     const apiPort = process.env["API_PORT"];
     if (!apiPort || Number.isNaN(parseInt(apiPort)))
@@ -405,19 +420,21 @@ function main() {
             : v.default ?? false,
     ).map((v) => v.command);
 
-    const server = new Server(apiHost, parseInt(apiPort), callback);
     const puppet = new Puppet(host, port, username, {
         enabledCommands: enabledCommands,
-        alwaysReconnect: alwaysReconnect
+        alwaysReconnect: alwaysReconnect,
+        chatAPI: chatAPI,
     });
 
-    server.puppet = puppet;
-    puppet.server = server;
+    if (chatAPI) {
+        const server = new Server(apiHost, parseInt(apiPort), callback);
+        server.puppet = puppet;
+        puppet.server = server;
+        server.startAPI();
+        server.loop();
+    }
 
     puppet.reconnect();
-    server.startAPI();
-
-    server.loop();
     puppet.loop();
 }
 
