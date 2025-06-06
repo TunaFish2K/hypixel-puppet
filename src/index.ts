@@ -74,8 +74,10 @@ class Puppet {
 
     options: {
         enabledCommands: string[];
+        alwaysReconnect: boolean
     } = {
         enabledCommands: [],
+        alwaysReconnect: true
     };
 
     constructor(
@@ -117,7 +119,7 @@ class Puppet {
             console.error("reconnecting failed, give up");
             return;
         }
-        this.reconnecting = true;
+        if (!this.options.alwaysReconnect) this.reconnecting = true;
         console.log(`connecting to ${this.host}:${this.port}...`);
         this.bot = this.createBot();
         this.bot.on("kicked", this.onKick.bind(this));
@@ -395,6 +397,8 @@ function main() {
     const callback = process.env["API_CALLBACK"];
     if (!callback) return console.error("environ `API_CALLBACK` not set!");
 
+    const alwaysReconnect = process.env["ALWAYS_RECONNECT"] === "true";
+
     const enabledCommands = SUPPORTED_COMMANDS.filter((v) =>
         process.env[v.env] !== undefined
             ? process.env[v.env] === "true"
@@ -404,6 +408,7 @@ function main() {
     const server = new Server(apiHost, parseInt(apiPort), callback);
     const puppet = new Puppet(host, port, username, {
         enabledCommands: enabledCommands,
+        alwaysReconnect: alwaysReconnect
     });
 
     server.puppet = puppet;
